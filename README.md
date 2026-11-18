@@ -6,7 +6,9 @@ Protótipo navegável de um painel de inteligência de gestão para prefeituras:
 
 ## Ver online
 
-Publicado com GitHub Pages a partir da branch `main`.
+**https://v1nyciuz.github.io/painel-municipal/**
+
+Publicado com GitHub Pages a partir da branch `main`: cada envio para a `main` atualiza o site em um ou dois minutos.
 
 ## Telas
 
