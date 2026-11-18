@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Painel da Prefeitura — protótipo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0F172A;--ink2:#334155;--muted:#5B6576;--line:#E4E7EC;--line2:#EEF0F3;--bg:#F6F7F9;--card:#fff;
+  --brand:#0E6E6E;--brand-d:#0A5555;--brand-l:#E6F2F2;--brand-b:#BBDADA;
+  --good:#1D7A55;--good-bg:#E3F2EA;--warn:#8A6100;--warn-bg:#FBF0D3;--warn-m:#C99A12;--crit:#B4400F;--crit-bg:#FCE7DC;
+  --avg:#7C8696;--best:#2F6FDE;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* shell */
+.shell{display:flex;min-height:100vh}
+.side{width:244px;flex:none;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:10px;padding:20px 20px 16px}
+.logo i{width:34px;height:34px;border-radius:9px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal}
+.logo b{display:block;font-size:15px;line-height:1.2}
+.logo span{font-size:12px;color:var(--muted)}
+.side nav{display:flex;flex-direction:column;gap:2px;padding:8px 12px}
+.side nav button{display:flex;align-items:center;gap:12px;border:0;background:transparent;border-radius:9px;padding:10px 12px;min-height:42px;font-size:14px;font-weight:500;color:var(--ink2);text-align:left}
+.side nav button:hover{background:var(--bg)}
+.side nav button.on{background:var(--brand-l);color:var(--brand-d);font-weight:600}
+.side .grow{flex:1}
+.side .foot{padding:16px 20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:20;background:rgba(246,247,249,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1180px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;gap:12px}
+.city{display:flex;flex-direction:column;min-width:0;margin-right:auto}
+.city b{font-size:18px;line-height:1.2}
+.city span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sel{position:relative}
+.sel select{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 34px 8px 12px;min-height:40px;font-size:14px;font-weight:600}
+.sel:after{content:"";position:absolute;right:13px;top:50%;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;min-height:40px;font-size:14px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.btn:hover{border-color:#CBD2DB}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.pri:hover{background:var(--brand-d)}
+.btn.sm{min-height:34px;padding:6px 12px;font-size:13px}
+.avatar{width:38px;height:38px;border-radius:999px;background:var(--brand);color:#fff;border:0;font-weight:600;font-size:13px;flex:none}
+.content{max-width:1180px;width:100%;margin:0 auto;padding:24px 28px 56px}
+.bnav{display:none}
+
+/* blocks */
+.ph{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
+.ph h1{font-size:24px;line-height:1.2;margin:0}
+.ph p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px}
+.pad{padding:18px 20px}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 0}
+.ch h2{font-size:15px;margin:0;font-weight:600}
+.ch span{font-size:12px;color:var(--muted)}
+.g{display:grid;gap:16px}
+.g>*{min-width:0}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g32{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+.mt{margin-top:16px}
+.kpi{padding:16px 18px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .l{font-size:13px;color:var(--muted);font-weight:500}
+.kpi .v{font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.01em}
+.kpi .v small{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.kpi .s{font-size:13px}
+.up{color:var(--good)}.down{color:var(--crit)}.flat{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p-good{background:var(--good-bg);color:var(--good)}.p-warn{background:var(--warn-bg);color:var(--warn)}.p-crit{background:var(--crit-bg);color:var(--crit)}.p-neu{background:#EEF0F3;color:var(--ink2)}
+.tag{font-size:12px;color:var(--muted);font-weight:500}
+.score{display:inline-flex;align-items:center;justify-content:center;min-width:46px;height:30px;padding:0 8px;border-radius:8px;font-weight:700;font-size:15px}
+.ai{background:linear-gradient(0deg,#fff,#fff);border:1px solid var(--brand-b);border-radius:14px;padding:18px 20px;position:relative}
+.ai .k{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--brand-d);text-transform:uppercase;letter-spacing:.05em}
+.ai p{margin:8px 0 0;font-size:15px;line-height:1.6;color:var(--ink)}
+.ai small{display:block;margin-top:10px;font-size:12px;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin-bottom:16px}
+.meta b{color:var(--ink2);font-weight:600}
+
+/* lists */
+.rows{display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:14px;padding:12px 20px;border:0;border-top:1px solid var(--line2);background:transparent;text-align:left;width:100%;min-height:56px}
+.row:first-child{border-top:0}
+.row:hover{background:#FAFBFC}
+.row .nm{flex:1;min-width:0}
+.row .nm b{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .nm span{font-size:12px;color:var(--muted)}
+.row .dl{font-size:13px;font-weight:600;min-width:52px;text-align:right}
+.row .vs{font-size:12px;color:var(--muted);min-width:96px;text-align:right}
+.row .sp{flex:none}
+.cardlist .row{padding-left:20px;padding-right:20px}
+
+/* area bars */
+.bars{display:flex;flex-direction:column;gap:2px;padding:10px 12px 14px}
+.bar{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) 44px 52px;align-items:center;gap:12px;border:0;background:transparent;border-radius:8px;padding:7px 8px;text-align:left;width:100%}
+.bar:hover{background:#FAFBFC}
+.bar .n{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{position:relative;height:10px;background:var(--line2);border-radius:999px}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.track u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.55;border-radius:2px}
+.bar .v{font-weight:700;font-size:14px;text-align:right}
+.bar .d{font-size:12px;font-weight:600;text-align:right}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);padding:0 20px 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.legend i.tick{width:2px;height:12px;background:var(--ink);opacity:.55}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--avg) 0 4px,transparent 4px 7px)}
+
+/* chart */
+.chart{width:100%;height:auto;display:block}
+.chartwrap{padding:8px 12px 6px}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.search{flex:1 1 260px;position:relative}
+.search input{width:100%;border:1px solid var(--line);background:#fff;border-radius:9px;min-height:40px;padding:8px 12px 8px 36px;font-size:14px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px;margin:0 -2px 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.seg{display:inline-flex;background:#EEF0F3;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;border-radius:8px;padding:6px 12px;min-height:34px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(15,23,42,.12)}
+.seg i{width:8px;height:8px;border-radius:999px;display:inline-block}
+.active{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-2px 0 12px;font-size:13px;color:var(--muted)}
+.rm{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 6px 4px 12px;min-height:32px;font-size:13px;font-weight:600;color:var(--ink2)}
+.rm span{width:20px;height:20px;border-radius:999px;background:#EEF0F3;display:inline-flex;align-items:center;justify-content:center}
+.sel.full select{width:100%}
+.chip{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;min-height:34px;font-size:13px;font-weight:500;color:var(--ink2);white-space:nowrap}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.thead{display:flex;gap:14px;padding:10px 20px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em}
+.thead .nm{flex:1}
+
+/* map */
+.map{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:16px 20px}
+.tile{border-radius:10px;padding:12px;min-height:88px;display:flex;flex-direction:column;justify-content:space-between;border:1.5px solid;text-align:left}
+.tile b{font-size:13px}
+.tile span{font-size:22px;font-weight:700}
+.span2{grid-column:span 2}
+
+/* comparativo */
+.cmp{display:grid;grid-template-columns:minmax(120px,200px) 56px 56px minmax(0,1fr) 72px;gap:12px;align-items:center;padding:11px 20px;border-top:1px solid var(--line2);font-size:14px}
+.cmp:first-child{border-top:0}
+.cmp.h{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+.div{position:relative;height:12px}
+.div:before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:#CBD2DB}
+.div i{position:absolute;top:0;bottom:0;border-radius:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.mapwrap{padding:12px 12px 0}
+.citymap{width:100%;height:auto;display:block;border-radius:10px}
+.citymap .reg{cursor:pointer;outline:none}
+.citymap .reg polygon{stroke:#fff;stroke-width:2.5;stroke-linejoin:round;transition:filter .12s}
+.citymap .reg:hover polygon{filter:brightness(.96)}
+.citymap .reg:focus-visible polygon{stroke:var(--brand);stroke-width:4}
+.citymap .reg.on polygon{stroke:var(--ink);stroke-width:3.5}
+.fld{display:flex;flex-direction:column;gap:6px;border:0;margin:0;padding:0;min-width:0}
+.fld label,.fld legend{font-size:13px;font-weight:600;color:var(--ink2);padding:0;margin-bottom:6px}
+.fld label{margin-bottom:0}
+.fld input,.fld textarea{width:100%;border:1px solid #CBD2DB;background:#fff;border-radius:9px;min-height:42px;padding:9px 12px;font-size:15px}
+.fld textarea{resize:vertical;min-height:84px}
+.fld [aria-invalid=true]{border-color:var(--crit)}
+.fld select:disabled{background:#F6F7F9;color:var(--muted)}
+.opt{font-weight:400;color:var(--muted)}
+.ferr{font-size:13px;color:var(--crit);font-weight:500}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{background:var(--brand-l);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink2);display:block}
+.hint .score{height:24px;min-width:38px;font-size:13px;margin:0 2px}
+.picks{display:flex;flex-wrap:wrap;gap:8px}
+.pick{border:1px solid #CBD2DB;background:#fff;border-radius:999px;padding:6px 12px;min-height:36px;font-size:13px;font-weight:600;color:var(--ink2)}
+.pick.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.pick.ghost{border-style:dashed;color:var(--brand)}
+.sheet .ft{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 20px calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:flex-end;gap:10px;margin-top:auto}
+@media (max-width:860px){.frow{grid-template-columns:1fr}.sheet .ft .btn{flex:1}}
+.grp{border-top:1px solid var(--line)}
+.grp:first-child{border-top:0}
+.ghd{display:grid;grid-template-columns:minmax(0,1fr) minmax(80px,160px) 104px 46px 22px;gap:14px;align-items:center;width:100%;border:0;background:#fff;padding:14px 20px;text-align:left;min-height:64px}
+.ghd:hover{background:#FAFBFC}
+.ghd b{display:block;font-size:15px}
+.ghd .c{font-size:12px;color:var(--muted)}
+.ghd .vs{font-size:12px;text-align:right}
+.ghd .chev{color:var(--muted);transition:transform .15s;display:flex}
+.grp.open .ghd .chev{transform:rotate(180deg)}
+.grp .rows{background:#FBFCFD;border-top:1px solid var(--line2)}
+.grp .row{padding-left:36px}
+.gtools{display:flex;justify-content:flex-end;gap:4px;margin:-4px 0 8px}
+.gtools .btn{border:0;background:transparent;color:var(--brand);min-height:32px;padding:4px 8px;font-size:13px}
+.apv{display:flex;flex-direction:column;gap:6px;padding:14px 20px 8px}
+.apr{display:grid;grid-template-columns:28px minmax(90px,140px) minmax(0,1fr) 56px;gap:10px;align-items:center;font-size:13px;min-height:26px}
+.apr .rk{color:var(--muted);text-align:right}
+.apr.me{font-weight:700}
+.apr .tr{position:relative;height:16px;background:var(--line2);border-radius:5px}
+.apr .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:#A5ADBA}
+.apr.me .tr i{background:var(--brand)}
+.apr .tr em{position:absolute;top:-3px;bottom:-3px;background:rgba(14,110,110,.18);border:1px dashed var(--brand);border-radius:4px}
+.apr .tr u{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);opacity:.6}
+.apr .v{text-align:right}
+.gap{height:10px;border-left:2px dotted #CBD2DB;margin-left:41px}
+.sechd{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:32px 0 14px}
+.sechd h2{font-size:19px;margin:0}
+.restr{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink2);background:#EEF0F3;border-radius:999px;padding:4px 10px}
+@media (max-width:860px){.ghd{grid-template-columns:minmax(0,1fr) 46px 22px;padding:14px 16px}.ghd .mb,.ghd .vs{display:none}.grp .row{padding-left:24px}.apr{grid-template-columns:24px minmax(70px,96px) minmax(0,1fr) 50px;gap:8px;padding:0}.apv{padding:12px 14px 6px}}
+.locked{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;background:#FAFBFC;border:1px dashed #CBD2DB;border-radius:14px}
+.locked svg{flex:none;color:var(--muted);margin-top:2px}
+.locked b{display:block}
+.locked p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+
+/* actions */
+.act{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;padding:16px 20px;border-top:1px solid var(--line2)}
+.act:first-child{border-top:0}
+.act .i{flex:999 1 280px;min-width:0}
+.act .i b{display:block}
+.act .i span{font-size:13px;color:var(--muted)}
+.act .ba{flex:1 1 220px;display:flex;align-items:center;gap:14px;justify-content:flex-end}
+.act .ba div{text-align:center}
+.act .ba small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.act .ba strong{font-size:18px}
+
+/* empty */
+.empty{text-align:center;padding:56px 24px}
+.empty .ic{width:52px;height:52px;border-radius:14px;background:var(--brand-l);color:var(--brand);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+.empty h2{font-size:18px;margin:0 0 6px}
+.empty p{margin:0 auto 16px;max-width:440px;color:var(--muted)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:40;display:flex;justify-content:flex-end}
+.sheet{background:#fff;width:min(560px,100%);height:100%;overflow-y:auto;box-shadow:-12px 0 32px rgba(15,23,42,.12);display:flex;flex-direction:column}
+.sheet .hd{position:sticky;top:0;background:#fff;z-index:1;display:flex;align-items:flex-start;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.sheet .hd .t{flex:1;min-width:0}
+.sheet .hd b{display:block;font-size:17px;line-height:1.3}
+.x{border:0;background:var(--bg);border-radius:9px;width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center}
+.sheet .bd{padding:18px 20px 28px;display:flex;flex-direction:column;gap:18px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat small{display:block;font-size:12px;color:var(--muted)}
+.stat b{font-size:18px}
+.sheet h3{font-size:14px;margin:0 0 8px}
+.quote{margin:0;padding:10px 12px;border-left:3px solid var(--brand-b);background:#FAFBFC;border-radius:0 8px 8px 0;font-size:14px;color:var(--ink2)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(15,23,42,.2)}
+.report{max-width:620px;margin:auto;background:#fff;border-radius:14px;width:calc(100% - 32px);max-height:calc(100% - 32px);overflow:auto}
+.scrim.center{align-items:center;justify-content:center}
+.demo{font-size:11px;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:3px 8px;border-radius:999px;white-space:nowrap}
+
+/* ===== responsive ===== */
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g32{grid-template-columns:1fr}}
+@media (max-width:860px){
+  .side{display:none}
+  .top .in{padding:10px 16px;gap:8px}
+  .city b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top .sel select{max-width:118px;padding-right:28px}
+  .top .sel:after{right:11px}
+  .top .btn{padding:8px 10px}
+  .avatar{width:36px;height:36px}
+  .content{padding:16px 16px 96px}
+  .g2{grid-template-columns:1fr}
+  .g4{gap:10px}
+  .kpi{padding:12px 14px}
+  .kpi .v{font-size:23px}
+  .ph h1{font-size:21px}
+  .hide-m{display:none!important}
+  .bnav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .bnav button{border:0;background:transparent;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted)}
+  .bnav button.on{color:var(--brand)}
+  .row{padding:12px 16px;gap:10px}
+  .row .vs,.row .sp{display:none}
+  .thead{display:none}
+  .bar{grid-template-columns:minmax(0,1fr) 40px 46px;grid-template-areas:"n v d" "t t t";row-gap:6px;padding:8px}
+  .bar .n{grid-area:n}.bar .track{grid-area:t}.bar .v{grid-area:v}.bar .d{grid-area:d}
+  .map{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}
+  .cmp{grid-template-columns:minmax(0,1fr) 44px 44px 56px;padding:11px 16px}
+  .cmp .div{display:none}
+  .sheet{width:100%;height:auto;max-height:92%;margin-top:auto;border-radius:16px 16px 0 0}
+  .scrim{align-items:flex-end}
+  .scrim.center{align-items:flex-end}
+  .report{width:100%;max-height:92%;border-radius:16px 16px 0 0;margin:auto 0 0}
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .toast{bottom:84px}
+}
+@media (min-width:861px){.only-m{display:none!important}}
+@media (max-width:860px){.toolbar .sel{flex:1 1 calc(50% - 5px)}.toolbar .sel select{width:100%}.toolbar .seg{flex:1 1 100%;display:flex}.toolbar .seg button{flex:1;justify-content:center;padding:6px 6px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+'use strict';
+/* ---------- dados fictícios ---------- */
+var MONTHS=['Nov/25','Dez/25','Jan/26','Fev/26','Mar/26','Abr/26','Mai/26','Jun/26','Jul/26','Ago/26','Set/26','Out/26','Nov/26'];
+var MONTHS_LONG=['novembro de 2025','dezembro de 2025','janeiro de 2026','fevereiro de 2026','março de 2026','abril de 2026','maio de 2026','junho de 2026','julho de 2026','agosto de 2026','setembro de 2026','outubro de 2026','novembro de 2026'];
+var MISSING={4:'Não houve rodada de pesquisa em março de 2026.',12:'A pesquisa de novembro de 2026 ainda não foi importada.'};
+var LAST=11, CAPS=26;
+var AREAS=[
+ ['limpeza','Limpeza urbana e zeladoria'],['obras','Obras e mobilidade'],['saneamento','Saneamento e meio ambiente'],
+ ['saude','Saúde'],['educacao','Educação'],['seguranca','Segurança pública'],['transporte','Transporte público'],
+ ['assistencia','Assistência social'],['cultura','Cultura'],['esporte','Esporte e lazer'],['turismo','Turismo'],
+ ['defesa','Defesa civil'],['atendimento','Atendimento ao cidadão'],['transparencia','Transparência']
+];
+var AREA_NAME={};AREAS.forEach(function(a){AREA_NAME[a[0]]=a[1];});
+// id, nome, area, nota atual, média capitais, var. último mês, tendência 12m, melhor capital
+var SV=[
+ ['coleta','Coleta de lixo','limpeza',6.0,6.7,-0.3,0.2,8.3],
+ ['varricao','Varrição de ruas e espaços públicos','limpeza',7.4,6.9,0.2,0.6,8.6],
+ ['vias','Construção de vias, viadutos e pontes','obras',5.6,4.5,0.1,0.4,7.2],
+ ['sinalizacao','Sinalização de trânsito e semáforos','obras',5.0,5.2,-0.1,-0.2,7.4],
+ ['buracos','Manutenção de ruas e buracos','obras',3.9,4.4,-0.6,-0.8,6.8],
+ ['agua','Abastecimento e qualidade da água','saneamento',5.4,5.1,0.0,0.1,7.9],
+ ['esgoto','Rede de esgoto','saneamento',4.6,4.8,-0.2,-0.1,7.5],
+ ['verdes','Praças e áreas verdes','saneamento',5.9,5.6,0.3,0.5,7.8],
+ ['ubs','Atendimento nas UBS','saude',4.2,4.6,-0.5,-0.6,6.9],
+ ['exames','Tempo de espera para exames','saude',3.5,3.9,-0.2,-0.4,6.1],
+ ['medicamentos','Acesso a medicamentos','saude',4.8,4.7,0.1,0.2,6.6],
+ ['merenda','Merenda escolar','educacao',5.4,5.3,0.1,0.2,7.7],
+ ['escolas','Estrutura física das escolas','educacao',5.2,5.2,0.0,0.3,7.3],
+ ['creche','Vagas em creche','educacao',3.8,4.3,-0.1,-0.3,6.4],
+ ['iluminacao','Iluminação pública','seguranca',5.3,5.3,0.4,0.9,7.6],
+ ['guarda','Presença da guarda municipal','seguranca',4.4,4.6,-0.1,0.0,6.5],
+ ['onibus','Ônibus e pontualidade','transporte',4.0,4.2,-0.3,-0.5,6.7],
+ ['capacitacao','Capacitação profissional e cursos','assistencia',3.6,4.4,-0.2,-0.3,6.3],
+ ['cras','Atendimento nos CRAS','assistencia',4.9,4.8,0.1,0.1,6.6],
+ ['eventos','Eventos culturais','cultura',6.3,5.9,0.2,0.4,8.1],
+ ['quadras','Quadras e espaços de esporte','esporte',5.7,5.5,0.1,0.3,7.6],
+ ['promocao','Promoção turística da cidade','turismo',5.5,5.1,0.0,0.2,8.0],
+ ['enchentes','Prevenção de alagamentos','defesa',4.3,4.5,-0.4,-0.2,6.9],
+ ['atend','Atendimento presencial e digital','atendimento',5.8,5.4,0.2,0.5,7.8],
+ ['portal','Portal da transparência','transparencia',5.1,4.9,0.0,0.2,7.4]
+];
+var QUOTES={
+ limpeza:['"O caminhão do lixo passa, mas pula a minha rua às vezes."','"A praça perto de casa está sempre limpa."'],
+ obras:['"Tem buraco na avenida há meses e ninguém conserta."','"A obra do viaduto melhorou muito o trânsito."'],
+ saneamento:['"Quando chove, o esgoto volta pela calçada."','"A água chega, mas falta em alguns dias."'],
+ saude:['"Demora mais de um mês para conseguir consulta no posto."','"O atendimento é bom quando a gente consegue ser atendido."'],
+ educacao:['"Não consegui vaga em creche perto de casa."','"A merenda da escola melhorou."'],
+ seguranca:['"A rua ficou mais clara depois das lâmpadas novas."','"Quase não vejo a guarda passando por aqui."'],
+ transporte:['"O ônibus atrasa e vem lotado no horário de pico."','"Faltam linhas para o meu bairro."'],
+ assistencia:['"Queria um curso para voltar ao mercado, mas não acho vaga."','"No CRAS fui bem atendida."'],
+ cultura:['"Os eventos na orla foram ótimos."','"Poderia ter mais coisa nos bairros."'],
+ esporte:['"A quadra precisa de reforma."','"Meu filho treina na quadra do bairro."'],
+ turismo:['"A cidade está mais cheia de turistas."','"Falta divulgação dos pontos fora do centro."'],
+ defesa:['"Toda chuva forte alaga a mesma rua."','"Recebi o alerta de chuva pelo celular."'],
+ atendimento:['"Resolvi tudo pelo aplicativo."','"A fila presencial ainda é grande."'],
+ transparencia:['"Nunca entrei no portal."','"Achei os gastos que procurava."']
+};
+var REGIONS=['Centro','Orla','Norte','Sul','Leste','Oeste','Miolo','Subúrbio'];
+var REG_OFF=[0.6,0.9,-0.4,0.3,-0.2,-0.7,-0.5,-1.0];
+var ACTIONS=[
+ {t:'Troca de lâmpadas por LED',a:'seguranca',s:'iluminacao',r:'Orla e Centro',st:'Concluída',from:4.4,to:5.3},
+ {t:'Mutirão de tapa-buraco nas avenidas',a:'obras',s:'buracos',r:'Subúrbio e Oeste',st:'Em andamento',from:4.5,to:null},
+ {t:'Ampliação do horário das UBS',a:'saude',s:'ubs',r:'Norte e Miolo',st:'Em andamento',from:4.8,to:null},
+ {t:'Limpeza de canais e bocas de lobo',a:'defesa',s:'enchentes',r:'Subúrbio',st:'Planejada',from:4.3,to:null},
+ {t:'Revitalização de praças',a:'saneamento',s:'verdes',r:'Leste e Sul',st:'Concluída',from:5.2,to:5.9}
+];
+
+function r1(x){return Math.round(x*10)/10;}
+var SVC=SV.map(function(s,k){
+  var cur=s[3],avg=s[4],d=s[5],t=s[6],hist=[],ah=[];
+  for(var i=0;i<13;i++){
+    if(MISSING[i]){hist.push(null);}
+    else if(i===LAST){hist.push(cur);}
+    else{var base=(cur-d)-t*(10-i)/10, w=i<10?Math.sin(i*1.3+k)*0.12:0;hist.push(r1(Math.max(0,Math.min(10,base+w))));}
+    ah.push(i===12?null:r1(avg+Math.sin(i*0.9+k)*0.07));
+  }
+  return {id:s[0],nome:s[1],area:s[2],hist:hist,avg:ah,best:s[7]};
+});
+
+/* ---------- utilidades ---------- */
+function low(t){return t.charAt(0).toLowerCase()+t.slice(1);}
+function f1(v){return v==null?'—':v.toFixed(1).replace('.',',');}
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function mean(a){a=a.filter(function(x){return x!=null;});return a.length?a.reduce(function(p,c){return p+c;},0)/a.length:null;}
+function prevIdx(i){for(var j=i-1;j>=0;j--)if(!MISSING[j])return j;return null;}
+function lastWithData(i){for(var j=i;j>=0;j--)if(!MISSING[j])return j;return LAST;}
+function level(v){return v>=6?'good':v>=5?'warn':'crit';}
+var LVL={good:{c:'p-good',l:'Bem avaliado',col:'#1D7A55',bg:'#E3F2EA'},warn:{c:'p-warn',l:'Atenção',col:'#C99A12',bg:'#FBF0D3'},crit:{c:'p-crit',l:'Crítico',col:'#B4400F',bg:'#FCE7DC'}};
+function scoreBox(v){var L=LVL[level(v)];return '<span class="score tnum" style="background:'+L.bg+';color:'+(level(v)==='warn'?'#8A6100':L.col)+'">'+f1(v)+'</span>';}
+function delta(d,suffix){
+  if(d==null)return '<span class="flat">—</span>';
+  var r=r1(d);
+  if(r===0)return '<span class="flat tnum">= 0,0'+(suffix||'')+'</span>';
+  return '<span class="tnum '+(r>0?'up':'down')+'">'+(r>0?'▲ ':'▼ ')+f1(Math.abs(r))+(suffix||'')+'</span>';
+}
+function vsAvg(d){var r=r1(d);if(r===0)return '<span class="flat">na média</span>';return '<span class="'+(r>0?'up':'down')+'">'+(r>0?'+':'−')+f1(Math.abs(r))+' vs média</span>';}
+function rankOf(v,avg){return Math.max(1,Math.min(CAPS,Math.round(13.5-(v-avg)*9)));}
+
+function svcAt(s,i){return s.hist[i];}
+function areaAt(a,i){return mean(SVC.filter(function(s){return s.area===a;}).map(function(s){return s.hist[i];}));}
+function areaAvgAt(a,i){return mean(SVC.filter(function(s){return s.area===a;}).map(function(s){return s.avg[i];}));}
+function areaBest(a){return Math.max.apply(null,SVC.filter(function(s){return s.area===a;}).map(function(s){return s.best;}));}
+function cityAt(i){return mean(SVC.map(function(s){return s.hist[i];}));}
+function cityAvgAt(i){return mean(SVC.map(function(s){return s.avg[i];}));}
+
+/* ---------- ícones ---------- */
+var SVGA='width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+var IC={
+ inicio:'<svg '+SVGA+'><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
+ servicos:'<svg '+SVGA+'><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>',
+ comparar:'<svg '+SVGA+'><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+ mapa:'<svg '+SVGA+'><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>',
+ acoes:'<svg '+SVGA+'><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>',
+ config:'<svg '+SVGA+'><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+ doc:'<svg '+SVGA+'><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
+ spark:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>',
+ lock:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+ x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ search:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+ cal:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+};
+
+/* ---------- gráficos ---------- */
+function lineChart(series,labels,label,dom,unit){
+  var nar=window.innerWidth<600,W=nar?360:640,H=nar?200:220,L=nar?30:34,R=nar?20:14,T=14,B=30,all=[];
+  series.forEach(function(s){s.v.forEach(function(x){if(x!=null)all.push(x);});});
+  var lo=Math.max(0,Math.floor(Math.min.apply(null,all)-0.5)),hi=Math.min(10,Math.ceil(Math.max.apply(null,all)+0.5));
+  if(hi-lo<2)hi=lo+2;
+  if(dom){lo=dom[0];hi=dom[1];}
+  var n=labels.length,X=function(i){return L+(W-L-R)*i/(n-1);},Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));};
+  var g='',st=dom?(hi-lo)/4:(hi-lo)>5?2:1;
+  for(var y=lo;y<=hi;y+=st){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(y)+'" y2="'+Y(y)+'" stroke="#EEF0F3"/><text x="'+(L-8)+'" y="'+(Y(y)+4)+'" text-anchor="end" font-size="11" fill="#5B6576">'+y+(unit||'')+'</text>';}
+  var xl='';labels.forEach(function(l,i){var every=nar?3:2;if(n<=7||(n-1-i)%every===0)xl+='<text x="'+X(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="#5B6576">'+l+'</text>';});
+  var gaps='';series[0].v.forEach(function(v,i){if(v==null&&i<n-1&&i>0)gaps+='<rect x="'+(X(i)-(nar?12:10))+'" y="'+T+'" width="'+(nar?24:20)+'" height="'+(H-T-B)+'" fill="#F6F7F9"/><text x="'+X(i)+'" y="'+(T+12)+'" text-anchor="middle" font-size="10" fill="#5B6576">sem</text><text x="'+X(i)+'" y="'+(T+24)+'" text-anchor="middle" font-size="10" fill="#5B6576">dados</text>';});
+  var paths='';
+  series.forEach(function(s){
+    var d='',pen=false;
+    s.v.forEach(function(v,i){if(v==null){pen=false;return;}d+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);pen=true;});
+    paths+='<path d="'+d+'" fill="none" stroke="'+s.c+'" stroke-width="'+(s.w||2)+'" '+(s.dash?'stroke-dasharray="5 4"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';
+    if(s.dots){s.v.forEach(function(v,i){if(v!=null)paths+='<circle cx="'+X(i)+'" cy="'+Y(v)+'" r="'+(i===s.hl?4.5:2.5)+'" fill="'+(i===s.hl?s.c:'#fff')+'" stroke="'+s.c+'" stroke-width="1.6"/>';});}
+  });
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label)+'">'+gaps+g+xl+paths+'</svg>';
+}
+function spark(vals,c){
+  var W=84,H=26,v=vals.filter(function(x){return x!=null;}),lo=Math.min.apply(null,v)-0.2,hi=Math.max.apply(null,v)+0.2,n=vals.length,d='',pen=false;
+  vals.forEach(function(x,i){if(x==null){pen=false;return;}d+=(pen?'L':'M')+(2+(W-4)*i/(n-1)).toFixed(1)+' '+(2+(H-4)*(1-(x-lo)/(hi-lo))).toFixed(1);pen=true;});
+  return '<svg class="sp" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><path d="'+d+'" fill="none" stroke="'+c+'" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+}
+
+/* ---------- estado ---------- */
+var S={view:'inicio',mi:LAST,area:'all',lvl:'all',sort:'pior',q:'',detail:null,mapArea:'all',mapMode:'nota',group:false,open:{},apvAll:false,region:7,form:null,report:false,toast:''};
+var NAV=[['inicio','Visão geral','Início'],['servicos','Serviços','Serviços'],['comparar','Comparativo','Comparar'],['mapa','Mapa por região','Mapa'],['acoes','Ações e impacto','Ações']];
+var app=document.getElementById('app');
+
+/* ---------- telas ---------- */
+function emptyMonth(){
+  var j=lastWithData(S.mi-1);
+  return '<div class="card empty"><div class="ic">'+IC.cal+'</div><h2>Sem dados para '+MONTHS[S.mi]+'</h2><p>'+MISSING[S.mi]+' O último mês disponível é '+MONTHS_LONG[j]+'.</p><button type="button" class="btn pri" data-act="month" data-v="'+j+'">Ver '+MONTHS[j]+'</button></div>';
+}
+
+function inicio(){
+  var i=S.mi,p=prevIdx(i),c=cityAt(i),cp=cityAt(p),ca=cityAvgAt(i);
+  var areas=AREAS.map(function(a){var v=areaAt(a[0],i),pv=areaAt(a[0],p);return{id:a[0],n:a[1],v:v,d:pv==null?null:v-pv,avg:areaAvgAt(a[0],i)};});
+  var crit=areas.filter(function(a){return a.v<5;}).length;
+  var svcs=SVC.map(function(s){var v=s.hist[i],pv=p==null?null:s.hist[p];return{s:s,v:v,d:pv==null?0:v-pv};});
+  var drops=svcs.slice().sort(function(a,b){return a.d-b.d;}).slice(0,4);
+  var ups=svcs.slice().sort(function(a,b){return b.d-a.d;}).slice(0,4);
+  var worstArea=areas.slice().sort(function(a,b){return a.v-b.v;})[0];
+  var rk=rankOf(c,ca);
+  var resumo='O índice geral ficou em '+f1(c)+' em '+MONTHS_LONG[i]+', '+(r1(c-cp)<0?'queda de '+f1(Math.abs(c-cp)):r1(c-cp)>0?'alta de '+f1(c-cp):'estável')+' em relação a '+MONTHS[p]+'. A maior piora foi em '+low(drops[0].s.nome)+' ('+f1(Math.abs(drops[0].d))+' ponto), seguida de '+low(drops[1].s.nome)+'. Do lado positivo, '+low(ups[0].s.nome)+' subiu '+f1(ups[0].d)+' ponto, em linha com a troca de lâmpadas concluída. '+worstArea.n+' segue como a área pior avaliada, com '+f1(worstArea.v)+'. A sugestão é começar por '+low(drops[0].s.nome)+', que caiu mais e já está abaixo da média das capitais.';
+  function li(o){var d=o.d;return '<button type="button" class="row" data-act="svc" data-v="'+o.s.id+'"><div class="nm"><b>'+esc(o.s.nome)+'</b><span>'+AREA_NAME[o.s.area]+'</span></div><span class="dl">'+delta(d)+'</span>'+scoreBox(o.v)+'</button>';}
+  var cityH=MONTHS.map(function(m,k){return cityAt(k);}).slice(0,12),avgH=MONTHS.map(function(m,k){return cityAvgAt(k);}).slice(0,12);
+  var bars=areas.slice().sort(function(a,b){return a.v-b.v;}).map(function(a){
+    var L=LVL[level(a.v)];
+    return '<button type="button" class="bar" data-act="area" data-v="'+a.id+'"><span class="n">'+a.n+'</span><span class="track"><i style="width:'+(a.v*10)+'%;background:'+L.col+'"></i><u style="left:calc('+(a.avg*10)+'% - 1px)"></u></span><span class="v tnum">'+f1(a.v)+'</span><span class="d">'+delta(a.d)+'</span></button>';
+  }).join('');
+  return '<div class="ph"><div><h1>Visão geral</h1><p>Pesquisa de '+MONTHS_LONG[i]+'</p></div></div>'+
+   '<div class="meta"><span><b>1.000</b> entrevistas</span><span>Margem de erro <b>±3,1 p.p.</b></span><span>Comparação com <b>'+CAPS+' capitais</b></span></div>'+
+   '<div class="g g4">'+
+    '<div class="card kpi"><span class="l">Índice geral</span><span class="v tnum">'+f1(c)+'<small>/ 10</small></span><span class="s">'+delta(c-cp,' desde '+MONTHS[p])+'</span></div>'+
+    '<div class="card kpi"><span class="l">Média das capitais</span><span class="v tnum">'+f1(ca)+'</span><span class="s">'+vsAvg(c-ca)+'</span></div>'+
+    '<div class="card kpi"><span class="l">Posição entre capitais</span><span class="v tnum">'+rk+'º<small>de '+CAPS+'</small></span><span class="s flat">pelo índice geral</span></div>'+
+    '<div class="card kpi"><span class="l">Áreas críticas</span><span class="v tnum" style="color:var(--crit)">'+crit+'<small>de '+AREAS.length+'</small></span><span class="s flat">nota abaixo de 5</span></div>'+
+   '</div>'+
+   '<div class="ai mt"><div class="k">'+IC.spark+'Resumo do mês</div><p>'+resumo+'</p><small>Gerado por IA a partir dos dados da pesquisa. Revise antes de compartilhar.</small></div>'+
+   '<div class="g g2 mt">'+
+    '<div class="card"><div class="ch"><h2>Maiores quedas</h2><span>vs '+MONTHS[p]+'</span></div><div class="rows" style="padding-top:8px">'+drops.map(li).join('')+'</div></div>'+
+    '<div class="card"><div class="ch"><h2>Maiores altas</h2><span>vs '+MONTHS[p]+'</span></div><div class="rows" style="padding-top:8px">'+ups.map(li).join('')+'</div></div>'+
+   '</div>'+
+   '<div class="g g32 mt">'+
+    '<div class="card"><div class="ch"><h2>Notas por área</h2><span>da pior para a melhor</span></div><div class="bars">'+bars+'</div><div class="legend"><span><i class="tick"></i>Média das capitais</span><span>Toque numa área para ver os serviços</span></div></div>'+
+    '<div class="card" style="align-self:start"><div class="ch"><h2>Evolução do índice geral</h2><span>12 meses</span></div><div class="chartwrap">'+lineChart([{v:avgH,c:'#7C8696',dash:true,w:1.6},{v:cityH,c:'#0E6E6E',w:2.4,dots:true,hl:Math.min(i,11)}],MONTHS.slice(0,12),'Evolução do índice geral comparado à média das capitais')+'</div><div class="legend"><span><i style="background:#0E6E6E"></i>Cidade</span><span><i class="dash"></i>Média das capitais</span></div></div>'+
+   '</div>';
+}
+
+function servicos(){
+  var i=S.mi,p=prevIdx(i),q=S.q.trim().toLowerCase();
+  var list=SVC.map(function(s){var v=s.hist[i],pv=p==null?null:s.hist[p];return{s:s,v:v,d:pv==null?0:v-pv,va:v-s.avg[i]};})
+   .filter(function(o){return (S.area==='all'||o.s.area===S.area)&&(S.lvl==='all'||level(o.v)===S.lvl)&&(!q||o.s.nome.toLowerCase().indexOf(q)>=0||AREA_NAME[o.s.area].toLowerCase().indexOf(q)>=0);});
+  var sorters={pior:function(a,b){return a.v-b.v;},queda:function(a,b){return a.d-b.d;},media:function(a,b){return a.va-b.va;},az:function(a,b){return a.s.nome.localeCompare(b.s.nome);}};
+  list.sort(sorters[S.sort]);
+  var areaSel='<label class="sel"><span style="position:absolute;width:1px;height:1px;overflow:hidden">Área</span><select data-act="areasel" aria-label="Filtrar por área"><option value="all">Todas as áreas</option>'+AREAS.map(function(a){return '<option value="'+a[0]+'"'+(S.area===a[0]?' selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></label>';
+  var cnt=function(l){return SVC.filter(function(s){return (S.area==='all'||s.area===S.area)&&(l==='all'||level(s.hist[i])===l);}).length;};
+  var seg='<div class="seg" role="group" aria-label="Filtrar por situação">'+[['all','Todos',''],['crit','Críticos','var(--crit)'],['warn','Atenção','var(--warn-m)'],['good','Bons','var(--good)']].map(function(o){var on=S.lvl===o[0];return '<button type="button" class="'+(on?'on':'')+'" data-act="lvl" data-v="'+o[0]+'" aria-pressed="'+on+'">'+(o[2]?'<i style="background:'+o[2]+'"></i>':'')+o[1]+' <span class="tnum flat">'+cnt(o[0])+'</span></button>';}).join('')+'</div>';
+  var active=(S.area!=='all'||S.lvl!=='all'||S.q)?'<div class="active">Filtros:'+(S.area!=='all'?'<button type="button" class="rm" data-act="area" data-v="all" aria-label="Remover filtro de área">'+AREA_NAME[S.area]+'<span>'+IC.x.replace('width="18" height="18"','width="12" height="12"')+'</span></button>':'')+(S.lvl!=='all'?'<button type="button" class="rm" data-act="lvl" data-v="all" aria-label="Remover filtro de situação">'+LVL[S.lvl].l+'<span>'+IC.x.replace('width="18" height="18"','width="12" height="12"')+'</span></button>':'')+'<button type="button" class="btn sm" data-act="clear" style="border:0;background:transparent;color:var(--brand)">Limpar tudo</button></div>':'';
+  function svcRow(o){
+    var L=LVL[level(o.v)];
+    return '<button type="button" class="row" data-act="svc" data-v="'+o.s.id+'"><div class="nm"><b>'+esc(o.s.nome)+'</b><span>'+AREA_NAME[o.s.area]+'</span></div>'+spark(o.s.hist.slice(0,i+1).slice(-12),L.col)+'<span class="vs">'+vsAvg(o.va)+'</span><span class="dl">'+delta(o.d)+'</span>'+scoreBox(o.v)+'</button>';
+  }
+  var rows;
+  if(!S.group){rows=list.map(svcRow).join('');}
+  else{
+    var auto=!!(S.q||S.lvl!=='all'||S.area!=='all');
+    var groups=AREAS.map(function(a){var it=list.filter(function(o){return o.s.area===a[0];});if(!it.length)return null;var v=areaAt(a[0],i),av=areaAvgAt(a[0],i),pv=p==null?null:areaAt(a[0],p);return{id:a[0],n:a[1],it:it,v:v,va:v-av,d:pv==null?null:v-pv};}).filter(Boolean).sort(function(x,y){return x.v-y.v;});
+    rows=groups.map(function(g){var open=auto||!!S.open[g.id],L=LVL[level(g.v)];
+      return '<div class="grp'+(open?' open':'')+'"><button type="button" class="ghd" data-act="tgl" data-v="'+g.id+'" aria-expanded="'+open+'"><span><b>'+g.n+'</b><span class="c">'+g.it.length+(g.it.length>1?' serviços':' serviço')+' · no mês '+delta(g.d)+'</span></span><span class="track mb"><i style="width:'+(g.v*10)+'%;background:'+L.col+'"></i></span><span class="vs">'+vsAvg(g.va)+'</span>'+scoreBox(g.v)+'<span class="chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span></button>'+(open?'<div class="rows">'+g.it.map(svcRow).join('')+'</div>':'')+'</div>';}).join('');
+  }
+  var empty='<div class="empty" style="padding:40px 20px"><h2>Nenhum serviço encontrado</h2><p>Nenhum serviço'+(S.q?' corresponde a "'+esc(S.q)+'"':'')+(S.area!=='all'?' em '+AREA_NAME[S.area]:'')+(S.lvl!=='all'?' com situação '+LVL[S.lvl].l.toLowerCase():'')+'.</p><button type="button" class="btn" data-act="clear">Limpar busca e filtros</button></div>';
+  return '<div class="ph"><div><h1>Serviços</h1><p>'+list.length+' de '+SVC.length+' serviços avaliados em '+MONTHS[i]+'</p></div><div class="seg" role="group" aria-label="Forma de exibir"><button type="button" class="'+(!S.group?'on':'')+'" data-act="group" data-v="0" aria-pressed="'+!S.group+'">Lista</button><button type="button" class="'+(S.group?'on':'')+'" data-act="group" data-v="1" aria-pressed="'+S.group+'">Por área</button></div></div>'+
+   '<div class="toolbar"><label class="search"><span class="hide-m" style="position:absolute;width:1px;height:1px;overflow:hidden">Buscar serviço</span>'+IC.search+'<input id="q" type="search" placeholder="Buscar serviço ou área" value="'+esc(S.q)+'" aria-label="Buscar serviço ou área"></label>'+
+   areaSel+'<label class="sel"><span style="position:absolute;width:1px;height:1px;overflow:hidden">Ordenar</span><select data-act="sort" aria-label="Ordenar por"><option value="pior"'+(S.sort==='pior'?' selected':'')+'>Pior nota primeiro</option><option value="queda"'+(S.sort==='queda'?' selected':'')+'>Maior queda no mês</option><option value="media"'+(S.sort==='media'?' selected':'')+'>Mais abaixo da média</option><option value="az"'+(S.sort==='az'?' selected':'')+'>Ordem alfabética</option></select></label>'+seg+'</div>'+
+   active+
+   (S.group&&!(S.q||S.lvl!=='all'||S.area!=='all')?'<div class="gtools"><button type="button" class="btn" data-act="openall">Abrir todas</button><button type="button" class="btn" data-act="closeall">Fechar todas</button></div>':'')+'<div class="card">'+(S.group?'':'<div class="thead"><span class="nm">Serviço</span><span style="width:84px">12 meses</span><span style="width:96px;text-align:right">vs capitais</span><span style="width:52px;text-align:right">Mês</span><span style="width:46px;text-align:right">Nota</span></div>')+'<div class="rows">'+(list.length?rows:empty)+'</div></div>';
+}
+
+var APV_CITY=[49.0,48.5,48.1,47.6,null,46.9,46.5,46.2,45.8,45.3,45.0,44.6,null];
+var APV_OTHERS=[92.0,85.1,84.9,84.2,74.0,73.3,70.1,58.4,57.6,54.0,53.1,52.2,51.2,47.9,43.8,42.0,41.5,40.0,38.2,36.0,35.4,33.0,30.5,28.0,25.0];
+var APV_AVG=[51.2,51.0,50.9,50.8,50.7,50.7,50.6,50.6,50.5,50.5,50.4,50.4,null];
+var MOE=3.1;
+function aprovacao(i){
+  var me=APV_CITY[i];if(me==null)return '';
+  var all=APV_OTHERS.map(function(v,k){return{n:'Capital '+String.fromCharCode(65+k),v:v};}).concat([{n:'Cidade Exemplo',v:me,me:true}]).sort(function(a,b){return b.v-a.v;});
+  all.forEach(function(o,k){o.r=k+1;});
+  var avg=mean(all.map(function(o){return o.v;})),rk=all.findIndex(function(o){return o.me;})+1;
+  var tie=all.filter(function(o){return !o.me&&Math.abs(o.v-me)<=MOE;}).length;
+  var pf=function(v){return v.toFixed(1).replace('.',',')+'%';};
+  var show=S.apvAll?all:all.filter(function(o){return Math.abs(o.r-rk)<=3||o.r===1;});
+  var rows='',last=0;
+  show.forEach(function(o){
+    if(o.r-last>1)rows+='<div class="gap" aria-hidden="true"></div>';last=o.r;
+    rows+='<div class="apr'+(o.me?' me':'')+'"><span class="rk tnum">'+o.r+'º</span><span>'+o.n+'</span><span class="tr">'+(o.me?'<em style="left:'+(o.v-MOE)+'%;width:'+(2*MOE)+'%"></em>':'')+'<i style="width:'+o.v+'%"></i><u style="left:calc('+avg+'% - 1px)"></u></span><span class="v tnum">'+pf(o.v)+'</span></div>';
+  });
+  var d=me-avg,pm=APV_CITY[prevIdx(i)];
+  return '<div class="sechd"><h2>Aprovação da gestão</h2><span class="restr">'+IC.lock.replace('width="22" height="22"','width="13" height="13"')+'Restrito ao gabinete</span></div>'+
+   '<div class="g g4">'+
+    '<div class="card kpi"><span class="l">Aprovação</span><span class="v tnum">'+pf(me)+'</span><span class="s">'+(d<0?'<span class="down">'+f1(Math.abs(d))+' p.p. abaixo da média</span>':'<span class="up">'+f1(d)+' p.p. acima da média</span>')+'</span></div>'+
+    '<div class="card kpi"><span class="l">Média das capitais</span><span class="v tnum">'+pf(avg)+'</span><span class="s flat">'+CAPS+' capitais</span></div>'+
+    '<div class="card kpi"><span class="l">Posição</span><span class="v tnum">'+rk+'º<small>de '+CAPS+'</small></span><span class="s flat">empate técnico com '+tie+(tie===1?' capital':' capitais')+'</span></div>'+
+    '<div class="card kpi"><span class="l">No mês</span><span class="v tnum" style="font-size:24px">'+delta(me-pm,' p.p.')+'</span><span class="s flat">vs '+MONTHS[prevIdx(i)]+'</span></div>'+
+   '</div>'+
+   '<div class="g g32 mt"><div class="card"><div class="ch"><h2>Comparativo de aprovação</h2><div class="seg" role="group" aria-label="Capitais exibidas"><button type="button" class="'+(!S.apvAll?'on':'')+'" data-act="apvall" data-v="0" aria-pressed="'+!S.apvAll+'">Próximas no ranking</button><button type="button" class="'+(S.apvAll?'on':'')+'" data-act="apvall" data-v="1" aria-pressed="'+S.apvAll+'">Todas</button></div></div>'+
+   '<div class="apv">'+rows+'</div><div class="legend" style="padding-top:8px"><span><i class="tick"></i>Média das capitais '+pf(avg)+'</span><span><i style="height:10px;width:16px;background:rgba(14,110,110,.18);border:1px dashed var(--brand)"></i>Margem de erro ±'+f1(MOE)+' p.p.</span></div></div>'+
+   '<div class="card" style="align-self:start"><div class="ch"><h2>Evolução da aprovação</h2><span>12 meses</span></div><div class="chartwrap">'+lineChart([{v:APV_AVG.slice(0,12),c:'#7C8696',dash:true,w:1.6},{v:APV_CITY.slice(0,12),c:'#0E6E6E',w:2.4,dots:true,hl:Math.min(i,11)}],MONTHS.slice(0,12),'Evolução da aprovação da gestão',[30,60],'%')+'</div><div class="legend"><span><i style="background:#0E6E6E"></i>Cidade</span><span><i class="dash"></i>Média das capitais</span></div></div></div>'+
+   '<p class="tag" style="margin-top:12px">Nomes das outras capitais ocultos no protótipo. Diferenças menores que a margem de erro são tratadas como empate técnico.</p>';
+}
+function comparar(){
+  var i=S.mi,c=cityAt(i),ca=cityAvgAt(i);
+  var areas=AREAS.map(function(a){var v=areaAt(a[0],i),av=areaAvgAt(a[0],i);return{id:a[0],n:a[1],v:v,av:av,b:areaBest(a[0]),d:v-av};}).sort(function(a,b){return a.d-b.d;});
+  var above=areas.filter(function(a){return a.d>0.05;}).length;
+  var rows=areas.map(function(a){
+    var w=Math.min(50,Math.abs(a.d)*25),pos=a.d>=0;
+    return '<button type="button" class="cmp" style="border-left:0;border-right:0;border-bottom:0;background:transparent;width:100%;text-align:left" data-act="area" data-v="'+a.id+'"><span style="font-weight:500">'+a.n+'</span><span class="tnum" style="font-weight:700">'+f1(a.v)+'</span><span class="tnum flat">'+f1(a.av)+'</span><span class="div"><i style="'+(pos?'left:50%':'right:50%')+';width:'+w+'%;background:'+(pos?'var(--good)':'var(--crit)')+'"></i></span><span class="tnum" style="text-align:right;font-weight:600">'+rankOf(a.v,a.av)+'º</span></button>';
+  }).join('');
+  return '<div class="ph"><div><h1>Comparativo</h1><p>A cidade em relação às '+CAPS+' capitais, em '+MONTHS_LONG[i]+'</p></div></div>'+
+   '<div class="g g4">'+
+    '<div class="card kpi"><span class="l">Índice da cidade</span><span class="v tnum">'+f1(c)+'</span><span class="s">'+vsAvg(c-ca)+'</span></div>'+
+    '<div class="card kpi"><span class="l">Posição geral</span><span class="v tnum">'+rankOf(c,ca)+'º<small>de '+CAPS+'</small></span><span class="s flat">entre as capitais</span></div>'+
+    '<div class="card kpi"><span class="l">Áreas acima da média</span><span class="v tnum">'+above+'<small>de '+AREAS.length+'</small></span><span class="s flat">das capitais</span></div>'+
+    '<div class="card kpi"><span class="l">Maior distância</span><span class="v" style="font-size:17px;line-height:1.3">'+areas[0].n+'</span><span class="s">'+vsAvg(areas[0].d)+'</span></div>'+
+   '</div>'+
+   '<div class="card mt"><div class="cmp h"><span>Área</span><span>Cidade</span><span>Capitais</span><span class="div" style="height:auto">Abaixo · Acima da média</span><span style="text-align:right">Posição</span></div>'+rows+'</div>'+
+   aprovacao(i);
+}
+
+var REG_POLY=[
+ '170,300 230,230 280,270 300,350 230,390 180,360',
+ '400,280 470,220 570,200 560,330 500,400 420,370',
+ '200,30 380,20 400,130 290,160 210,150',
+ '280,270 400,280 420,370 330,400 300,350',
+ '380,20 560,40 570,200 470,220 400,130',
+ '70,140 120,190 210,150 230,230 170,300 100,280 80,210',
+ '210,150 290,160 400,130 470,220 400,280 280,270 230,230',
+ '60,40 200,30 210,150 120,190 70,140'
+];
+var REG_POP=[92,148,176,121,163,138,214,187];
+function regScore(k,area,i){
+  if(i==null||MISSING[i])return null;
+  var base=area==='all'?cityAt(i):areaAt(area,i),ai=area==='all'?0:AREAS.findIndex(function(a){return a[0]===area;})+1;
+  return Math.max(0,Math.min(10,r1(base+REG_OFF[k]+Math.sin(k*2.1+ai)*0.45+Math.sin(k*1.1+ai+i*0.9)*0.18)));
+}
+function centroid(p){var pts=p.split(' ').map(function(x){return x.split(',').map(Number);});var sx=0,sy=0;pts.forEach(function(q){sx+=q[0];sy+=q[1];});return[sx/pts.length,sy/pts.length];}
+function mapa(){
+  var i=S.mi,p=prevIdx(i),A=S.mapArea,mode=S.mapMode;
+  var mapSel='<label class="sel"><span class="sr">Tema do mapa</span><select data-act="mapsel" aria-label="Tema do mapa"><option value="all">Índice geral</option>'+AREAS.map(function(a){return '<option value="'+a[0]+'"'+(A===a[0]?' selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></label>';
+  var seg='<div class="seg" role="group" aria-label="O que mostrar no mapa">'+[['nota','Nota'],['var','Variação no mês']].map(function(o){var on=mode===o[0];return '<button type="button" class="'+(on?'on':'')+'" data-act="mapmode" data-v="'+o[0]+'" aria-pressed="'+on+'">'+o[1]+'</button>';}).join('')+'</div>';
+  var regs=REGIONS.map(function(n,k){var v=regScore(k,A,i),pv=regScore(k,A,p);return{k:k,n:n,v:v,d:pv==null?0:r1(v-pv)};});
+  function fill(r){
+    if(mode==='var'){return r.d>=0.1?['#9FD3B8','#0B5136']:r.d<=-0.1?['#F2B392','#7A2A07']:['#E3E6EB','#334155'];}
+    var l=level(r.v);return l==='good'?['#A8D9BE','#0B5136']:l==='warn'?['#F4D98C','#5C4100']:['#F2B392','#7A2A07'];
+  }
+  var sel=S.region,nar=window.innerWidth<600,fs1=nar?20:15,fs2=nar?28:21;
+  var shapes=regs.map(function(r){
+    var f=fill(r),c=centroid(REG_POLY[r.k]),on=sel===r.k,val=mode==='var'?(r.d>0?'+':r.d<0?'−':'')+f1(Math.abs(r.d)):f1(r.v);
+    return '<g class="reg'+(on?' on':'')+'" data-act="region" data-v="'+r.k+'" role="button" tabindex="0" aria-pressed="'+on+'" aria-label="'+r.n+': '+(mode==='var'?'variação '+val:'nota '+val)+'">'+
+      '<polygon points="'+REG_POLY[r.k]+'" fill="'+f[0]+'"/>'+
+      '<text x="'+c[0]+'" y="'+(c[1]-(nar?9:6))+'" text-anchor="middle" font-size="'+fs1+'" font-weight="600" fill="'+f[1]+'">'+r.n+'</text>'+
+      '<text x="'+c[0]+'" y="'+(c[1]+(nar?22:17))+'" text-anchor="middle" font-size="'+fs2+'" font-weight="700" fill="'+f[1]+'">'+val+'</text></g>';
+  }).join('');
+  var svg='<svg class="citymap" viewBox="30 0 570 430" role="group" aria-label="Mapa da cidade por região">'+
+    '<rect x="30" y="0" width="570" height="430" fill="#DCEAF4"/>'+
+    '<text x="40" y="320" font-size="14" font-style="italic" fill="#5C7A93">Baía</text>'+
+    '<text x="330" y="424" font-size="14" font-style="italic" fill="#5C7A93">Oceano</text>'+
+    shapes+
+    '<g fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round" opacity=".9" pointer-events="none"><path d="M120,95 L300,100 L470,110"/><path d="M262,40 L262,210 L250,330"/><path d="M140,250 L330,240 L520,300"/></g>'+
+    '<path d="M330,22 C340,70 315,110 335,150 C350,185 330,215 345,250" fill="none" stroke="#9CC3DE" stroke-width="3" pointer-events="none"/>'+
+    '</svg>';
+  var legend=mode==='var'?'<span><i style="background:#9FD3B8"></i>Melhorou</span><span><i style="background:#E3E6EB"></i>Estável</span><span><i style="background:#F2B392"></i>Piorou</span>':'<span><i style="background:#A8D9BE"></i>6 ou mais</span><span><i style="background:#F4D98C"></i>5 a 5,9</span><span><i style="background:#F2B392"></i>abaixo de 5</span>';
+  // painel da região
+  var r=regs[sel],city=A==='all'?cityAt(i):areaAt(A,i);
+  var byArea=AREAS.map(function(a,ai){var v=Math.max(0,Math.min(10,r1(areaAt(a[0],i)+REG_OFF[sel]+Math.sin(sel*1.3+ai)*0.6)));return{n:a[1],id:a[0],v:v};}).sort(function(a,b){return a.v-b.v;});
+  function brow(o){var L=LVL[level(o.v)];return '<button type="button" class="bar" data-act="area" data-v="'+o.id+'" style="grid-template-columns:minmax(0,1fr) minmax(60px,120px) 40px"><span class="n">'+o.n+'</span><span class="track"><i style="width:'+(o.v*10)+'%;background:'+L.col+'"></i></span><span class="v tnum">'+f1(o.v)+'</span></button>';}
+  var panel='<div class="card" style="align-self:start"><div class="pad" style="padding-bottom:6px"><span class="tag">Região selecionada</span><h2 style="font-size:20px;margin:2px 0 10px">'+r.n+'</h2>'+
+    '<div class="stats"><div class="stat"><small>'+(A==='all'?'Índice':'Nota')+'</small><b class="tnum">'+f1(r.v)+'</b></div><div class="stat"><small>No mês</small><b style="font-size:15px">'+delta(r.d)+'</b></div><div class="stat"><small>vs cidade</small><b style="font-size:15px">'+(r1(r.v-city)>=0?'<span class="up">+':'<span class="down">−')+f1(Math.abs(r.v-city))+'</span></b></div></div>'+
+    '<p class="tag" style="margin:10px 0 0">'+REG_POP[sel]+' mil habitantes · '+Math.round(1000*REG_POP[sel]/1239)+' entrevistas no mês</p></div>'+
+    '<div class="ch" style="padding-top:10px"><h2>Áreas pior avaliadas</h2></div><div class="bars" style="padding-top:6px;padding-bottom:4px">'+byArea.slice(0,4).map(brow).join('')+'</div>'+
+    '<div class="ch" style="padding-top:4px"><h2>Mais bem avaliadas</h2></div><div class="bars" style="padding-top:6px">'+byArea.slice(-2).reverse().map(brow).join('')+'</div>'+
+    '<div class="pad" style="padding-top:0"><button type="button" class="btn" style="width:100%" data-act="newaction" data-region="'+sel+'">Registrar ação nesta região</button></div></div>';
+  var ranking=regs.slice().sort(function(a,b){return mode==='var'?a.d-b.d:a.v-b.v;});
+  var rk='<div class="card mt"><div class="ch"><h2>Ranking das regiões</h2><span>'+(mode==='var'?'maior queda primeiro':'pior nota primeiro')+'</span></div><div class="rows" style="padding-top:8px">'+ranking.map(function(o,n){return '<button type="button" class="row" data-act="region" data-v="'+o.k+'"><span class="tnum flat" style="width:18px">'+(n+1)+'</span><div class="nm"><b>'+o.n+'</b><span>'+REG_POP[o.k]+' mil habitantes</span></div><span class="dl">'+delta(o.d)+'</span>'+scoreBox(o.v)+'</button>';}).join('')+'</div></div>';
+  return '<div class="ph"><div><h1>Mapa da cidade</h1><p>'+(A==='all'?'Índice geral':AREA_NAME[A])+' por região administrativa, '+MONTHS[i]+'</p></div></div>'+
+   '<div class="toolbar">'+mapSel+seg+'</div>'+
+   '<div class="g g32"><div><div class="card"><div class="mapwrap">'+svg+'</div><div class="legend" style="padding-top:12px">'+legend+'<span>Toque numa região para ver os detalhes</span></div></div>'+rk+'</div>'+panel+'</div>'+
+   '<p class="tag" style="margin-top:12px">Mapa ilustrativo de uma cidade fictícia. A nota por região usa a média móvel de 3 meses para reduzir a margem de erro.</p>';
+}
+
+function newForm(o){o=o||{};return{t:'',area:o.area||'',svc:o.svc||'',regs:o.regs||[],st:'Planejada',ini:'',fim:'',resp:'',desc:'',err:{}};}
+function actionForm(){
+  var F=S.form,i=lastWithData(S.mi);
+  var svcs=SVC.filter(function(s){return s.area===F.area;});
+  var cur=F.svc?SVC.find(function(s){return s.id===F.svc;}):null;
+  function err(k){return F.err[k]?'<span class="ferr" id="e-'+k+'">'+F.err[k]+'</span>':'';}
+  function inv(k){return F.err[k]?' aria-invalid="true" aria-describedby="e-'+k+'"':'';}
+  return '<div class="scrim" data-act="close"><form class="sheet" id="af" role="dialog" aria-modal="true" aria-labelledby="ft" data-stop="1" novalidate>'+
+   '<div class="hd"><div class="t"><span class="tag">Ações e impacto</span><b id="ft">Registrar ação</b></div><button type="button" class="x" data-act="close" aria-label="Fechar">'+IC.x+'</button></div>'+
+   '<div class="bd">'+
+    '<div class="fld"><label for="f-t">Nome da ação</label><input id="f-t" data-f="t" type="text" placeholder="Ex.: Mutirão de tapa-buraco" value="'+esc(F.t)+'"'+inv('t')+'>'+err('t')+'</div>'+
+    '<div class="frow"><div class="fld"><label for="f-area">Área</label><span class="sel full"><select id="f-area" data-f="area"'+inv('area')+'><option value="">Selecione</option>'+AREAS.map(function(a){return '<option value="'+a[0]+'"'+(F.area===a[0]?' selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></span>'+err('area')+'</div>'+
+    '<div class="fld"><label for="f-svc">Serviço</label><span class="sel full"><select id="f-svc" data-f="svc"'+(F.area?'':' disabled')+inv('svc')+'><option value="">'+(F.area?'Selecione':'Escolha a área antes')+'</option>'+svcs.map(function(s){return '<option value="'+s.id+'"'+(F.svc===s.id?' selected':'')+'>'+esc(s.nome)+'</option>';}).join('')+'</select></span>'+err('svc')+'</div></div>'+
+    (cur?'<div class="hint">Nota atual de <b>'+esc(cur.nome)+'</b>: '+scoreBox(cur.hist[i])+' em '+MONTHS[i]+'. Ela fica registrada como o "antes", e o "depois" vem das próximas pesquisas.</div>':'')+
+    '<fieldset class="fld"><legend>Regiões atendidas</legend><div class="picks">'+REGIONS.map(function(r,k){var on=F.regs.indexOf(k)>=0;return '<button type="button" class="pick'+(on?' on':'')+'" data-act="freg" data-v="'+k+'" aria-pressed="'+on+'">'+r+'</button>';}).join('')+'<button type="button" class="pick ghost" data-act="fregall">'+(F.regs.length===REGIONS.length?'Limpar':'Cidade toda')+'</button></div>'+err('regs')+'</fieldset>'+
+    '<fieldset class="fld"><legend>Situação</legend><div class="seg" style="display:flex">'+['Planejada','Em andamento','Concluída'].map(function(s){var on=F.st===s;return '<button type="button" class="'+(on?'on':'')+'" style="flex:1;justify-content:center" data-act="fst" data-v="'+s+'" aria-pressed="'+on+'">'+s+'</button>';}).join('')+'</div></fieldset>'+
+    '<div class="frow"><div class="fld"><label for="f-ini">Início</label><input id="f-ini" data-f="ini" type="date" value="'+esc(F.ini)+'"></div><div class="fld"><label for="f-fim">Previsão de conclusão</label><input id="f-fim" data-f="fim" type="date" value="'+esc(F.fim)+'"></div></div>'+
+    '<div class="fld"><label for="f-resp">Responsável</label><input id="f-resp" data-f="resp" type="text" placeholder="Secretaria ou pessoa" value="'+esc(F.resp)+'"></div>'+
+    '<div class="fld"><label for="f-desc">Descrição <span class="opt">(opcional)</span></label><textarea id="f-desc" data-f="desc" rows="3" placeholder="O que será feito, onde e com qual orçamento">'+esc(F.desc)+'</textarea></div>'+
+   '</div>'+
+   '<div class="ft"><button type="button" class="btn" data-act="close">Cancelar</button><button type="submit" class="btn pri">Registrar ação</button></div>'+
+   '</form></div>';
+}
+
+function acoes(){
+  var st={'Concluída':'p-good','Em andamento':'p-neu','Planejada':'p-warn'};
+  var rows=ACTIONS.map(function(a){
+    var done=a.to!=null;
+    return '<div class="act"><div class="i"><b>'+esc(a.t)+(a.isNew?' <span class="pill p-neu" style="margin-left:6px">Nova</span>':'')+'</b><span>'+AREA_NAME[a.a]+' · '+a.r+'</span><div style="margin-top:6px"><span class="pill '+st[a.st]+'">'+a.st+'</span></div></div><div class="ba"><div><small>Antes</small><strong class="tnum">'+f1(a.from)+'</strong></div><span class="flat" aria-hidden="true">→</span><div><small>Depois</small><strong class="tnum">'+(done?f1(a.to):'—')+'</strong></div><div style="text-align:left;min-width:120px;font-size:13px;font-weight:600">'+(done?'<span class="up">▲ '+f1(a.to-a.from)+' na percepção</span>':'<span class="flat">Aguardando próxima pesquisa</span>')+'</div></div></div>';
+  }).join('');
+  return '<div class="ph"><div><h1>Ações e impacto</h1><p>Cada ação é medida nas pesquisas seguintes</p></div><button type="button" class="btn pri" data-act="newaction">Registrar ação</button></div>'+
+   '<div class="g g4"><div class="card kpi"><span class="l">Ações registradas</span><span class="v tnum">'+ACTIONS.length+'</span></div><div class="card kpi"><span class="l">Concluídas</span><span class="v tnum">'+ACTIONS.filter(function(x){return x.st==='Concluída';}).length+'</span></div><div class="card kpi"><span class="l">Com melhora medida</span><span class="v tnum up">'+ACTIONS.filter(function(x){return x.to!=null&&x.to>x.from;}).length+'</span></div><div class="card kpi"><span class="l">Ganho médio</span><span class="v tnum up">+'+f1(mean(ACTIONS.filter(function(x){return x.to!=null;}).map(function(x){return x.to-x.from;})))+'</span></div></div>'+
+   '<div class="card mt">'+rows+'</div>';
+}
+
+function config(){
+  return '<div class="ph"><div><h1>Configurações</h1><p>Conta e preferências da prefeitura</p></div></div>'+
+   '<div class="g g2"><div class="card pad"><h2 style="font-size:15px;margin:0 0 12px">Conta</h2><p style="margin:0 0 4px"><b>Prefeitura de Cidade Exemplo</b></p><p class="tag" style="margin:0">gabinete@cidadeexemplo.gov.br</p></div>'+
+   '<div class="card pad"><h2 style="font-size:15px;margin:0 0 12px">Usuários e permissões</h2><p class="tag" style="margin:0 0 12px">Gabinete vê tudo; cada secretaria vê a própria área.</p><button type="button" class="btn sm" data-act="toast" data-v="Na versão real, abre a gestão de usuários.">Gerenciar usuários</button></div></div>';
+}
+
+function detail(){
+  var s=SVC.find(function(x){return x.id===S.detail;});if(!s)return '';
+  var i=S.mi,p=prevIdx(i),v=s.hist[i],L=LVL[level(v)];
+  var regs=REGIONS.map(function(r,k){return{n:r,v:r1(Math.max(0,Math.min(10,v+REG_OFF[k]+Math.sin(k*1.7+s.id.length)*0.5)))};}).sort(function(a,b){return a.v-b.v;}).slice(0,3);
+  var q=QUOTES[s.area]||[];
+  return '<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dt" data-stop="1">'+
+   '<div class="hd"><div class="t"><span class="tag">'+AREA_NAME[s.area]+'</span><b id="dt">'+esc(s.nome)+'</b></div><button type="button" class="x" data-act="close" aria-label="Fechar">'+IC.x+'</button></div>'+
+   '<div class="bd">'+
+    '<div style="display:flex;align-items:center;gap:12px">'+scoreBox(v)+'<span class="pill '+L.c+'">'+L.l+'</span><span style="font-size:13px">'+delta(v-s.hist[p],' no mês')+'</span></div>'+
+    '<div class="stats"><div class="stat"><small>Média das capitais</small><b class="tnum">'+f1(s.avg[i])+'</b></div><div class="stat"><small>Melhor capital</small><b class="tnum">'+f1(s.best)+'</b></div><div class="stat"><small>Posição</small><b class="tnum">'+rankOf(v,s.avg[i])+'º</b></div></div>'+
+    '<div><h3>Evolução em 12 meses</h3>'+lineChart([{v:s.avg.slice(0,12),c:'#7C8696',dash:true,w:1.6},{v:s.hist.slice(0,12),c:'#0E6E6E',w:2.4,dots:true,hl:Math.min(i,11)}],MONTHS.slice(0,12),'Evolução de '+s.nome)+'<div class="legend" style="padding:6px 0 0"><span><i style="background:#0E6E6E"></i>Cidade</span><span><i class="dash"></i>Média das capitais</span></div></div>'+
+    '<div><h3>Regiões com pior avaliação</h3><div class="rows" style="border:1px solid var(--line);border-radius:10px">'+regs.map(function(r){return '<div class="row" style="cursor:default;min-height:48px"><div class="nm"><b>'+r.n+'</b></div>'+scoreBox(r.v)+'</div>';}).join('')+'</div></div>'+
+    '<div><h3>O que os moradores dizem</h3><div style="display:flex;flex-direction:column;gap:8px">'+q.map(function(t){return '<p class="quote">'+esc(t)+'</p>';}).join('')+'</div><p class="tag" style="margin:8px 0 0">Respostas abertas agrupadas por IA. Exemplos ilustrativos.</p></div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:10px"><button type="button" class="btn pri" data-act="newaction" data-svc="'+s.id+'">Registrar ação</button><button type="button" class="btn" data-act="ask" data-v="'+s.id+'">Perguntar à IA</button></div>'+
+   '</div></div></div>';
+}
+
+function report(){
+  var i=lastWithData(S.mi),c=cityAt(i),p=prevIdx(i);
+  var worst=SVC.slice().sort(function(a,b){return a.hist[i]-b.hist[i];}).slice(0,3);
+  return '<div class="scrim center" data-act="close"><div class="report" role="dialog" aria-modal="true" aria-labelledby="rt" data-stop="1">'+
+   '<div class="sheet" style="width:100%;height:auto;box-shadow:none;border-radius:inherit"><div class="hd"><div class="t"><span class="tag">Relatório mensal</span><b id="rt">Pesquisa de '+MONTHS_LONG[i]+'</b></div><button type="button" class="x" data-act="close" aria-label="Fechar">'+IC.x+'</button></div>'+
+   '<div class="bd"><div class="stats"><div class="stat"><small>Índice geral</small><b class="tnum">'+f1(c)+'</b></div><div class="stat"><small>Variação</small><b>'+delta(c-cityAt(p))+'</b></div><div class="stat"><small>Posição</small><b class="tnum">'+rankOf(c,cityAvgAt(i))+'º de '+CAPS+'</b></div></div>'+
+   '<div><h3>Pontos de atenção</h3><ol style="margin:0;padding-left:20px;font-size:14px">'+worst.map(function(s){return '<li>'+esc(s.nome)+' — '+f1(s.hist[i])+'</li>';}).join('')+'</ol></div>'+
+   '<div><h3>Conteúdo do PDF</h3><ul style="margin:0;padding-left:20px;font-size:14px;color:var(--ink2)"><li>Resumo do mês escrito pela IA</li><li>Notas por área e por serviço</li><li>Comparativo com as capitais</li><li>Mapa por região e ações em andamento</li></ul></div>'+
+   '<div style="display:flex;flex-wrap:wrap;gap:10px"><button type="button" class="btn pri" data-act="toast" data-v="Na versão real, baixa o PDF pronto para a reunião de secretariado.">Gerar PDF</button><button type="button" class="btn" data-act="close">Fechar</button></div></div></div></div></div>';
+}
+
+/* ---------- render ---------- */
+function shell(){
+  var v=S.view,needsData=v!=='acoes'&&v!=='config';
+  var body=(needsData&&MISSING[S.mi])?emptyMonth():{inicio:inicio,servicos:servicos,comparar:comparar,mapa:mapa,acoes:acoes,config:config}[v]();
+  var opts=MONTHS.map(function(m,k){return '<option value="'+k+'"'+(k===S.mi?' selected':'')+'>'+m+(MISSING[k]?' · sem dados':'')+'</option>';}).reverse().join('');
+  var side=NAV.map(function(n){return '<button type="button" class="'+(v===n[0]?'on':'')+'" data-act="view" data-v="'+n[0]+'" aria-current="'+(v===n[0]?'page':'false')+'">'+IC[n[0]]+n[1]+'</button>';}).join('');
+  var bnav=NAV.map(function(n){return '<button type="button" class="'+(v===n[0]?'on':'')+'" data-act="view" data-v="'+n[0]+'" aria-current="'+(v===n[0]?'page':'false')+'">'+IC[n[0]]+'<span>'+n[2]+'</span></button>';}).join('');
+  return '<div class="shell"><aside class="side"><div class="logo"><i>'+IC.comparar+'</i><div><b>Painel Municipal</b><span>Inteligência de gestão</span></div></div><nav aria-label="Seções">'+side+'</nav><div class="grow"></div><nav aria-label="Conta"><button type="button" class="'+(v==='config'?'on':'')+'" data-act="view" data-v="config">'+IC.config+'Configurações</button></nav><div class="foot">Protótipo com dados fictícios</div></aside>'+
+   '<div class="main"><header class="top"><div class="in"><div class="city"><b>Cidade Exemplo</b><span>Gabinete do prefeito<span class="hide-m"> · <span class="demo">Demo</span></span></span></div>'+
+   '<label class="sel"><span style="position:absolute;width:1px;height:1px;overflow:hidden">Mês da pesquisa</span><select data-act="month" aria-label="Mês da pesquisa">'+opts+'</select></label>'+
+   '<button type="button" class="btn" data-act="report" aria-label="Relatório do mês">'+IC.doc+'<span class="hide-m">Relatório</span></button>'+
+   '<button type="button" class="avatar" data-act="view" data-v="config" aria-label="Conta e configurações">GB</button></div></header>'+
+   '<main class="content">'+body+'</main></div></div>'+
+   '<nav class="bnav" aria-label="Seções">'+bnav+'</nav>'+
+   (S.detail?detail():'')+(S.report?report():'')+(S.form?actionForm():'')+(S.toast?'<div class="toast" role="status">'+esc(S.toast)+'</div>':'');
+}
+var tt=null,lastView=null;
+function render(focusId){
+  var y=window.scrollY;
+  app.innerHTML=shell();
+  if(lastView!==S.view){window.scrollTo(0,0);lastView=S.view;}else window.scrollTo(0,y);
+  if(focusId&&focusId!=='__none'){var el=document.getElementById(focusId);if(el){el.focus();var l=el.value.length;try{el.setSelectionRange(l,l);}catch(e){}}}
+  if((S.detail||S.report||S.form)&&!focusId){var x=S.form?document.getElementById(S.form._focus||'f-t'):app.querySelector('.x');if(x)x.focus();if(S.form)S.form._focus=null;}
+}
+function toast(t){S.toast=t;render();clearTimeout(tt);tt=setTimeout(function(){S.toast='';render();},2600);}
+
+app.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]');
+  if(!el)return;
+  if(el.tagName==='SELECT')return;
+  var a=el.getAttribute('data-act'),v=el.getAttribute('data-v');
+  if(a==='close'){if(e.target.closest('[data-stop]')&&el.classList.contains('scrim'))return;if(S.form){S.form=null;}else{S.detail=null;S.report=false;}render();return;}
+  if(a==='view'){S.view=v;S.detail=null;}
+  else if(a==='month'){S.mi=+v;}
+  else if(a==='svc'){S.detail=v;}
+  else if(a==='area'){S.area=v;S.view='servicos';S.detail=null;}
+  else if(a==='maparea'){S.mapArea=v;}
+  else if(a==='clear'){S.q='';S.area='all';S.lvl='all';}
+  else if(a==='lvl'){S.lvl=v;}
+  else if(a==='group'){S.group=v==='1';}
+  else if(a==='tgl'){S.open[v]=!S.open[v];render('__none');var t=app.querySelector('[data-act="tgl"][data-v="'+v+'"]');if(t)t.focus();return;}
+  else if(a==='openall'){AREAS.forEach(function(x){S.open[x[0]]=true;});}
+  else if(a==='closeall'){S.open={};}
+  else if(a==='apvall'){S.apvAll=v==='1';}
+  else if(a==='newaction'){var sv=el.getAttribute('data-svc'),rg=el.getAttribute('data-region');var o={};if(sv){var x=SVC.find(function(q){return q.id===sv;});o.area=x.area;o.svc=sv;}if(rg!=null)o.regs=[+rg];S.form=newForm(o);}
+  else if(a==='freg'){var k=+v,ix=S.form.regs.indexOf(k);if(ix>=0)S.form.regs.splice(ix,1);else S.form.regs.push(k);delete S.form.err.regs;S.form._focus=null;render('__none');var b=app.querySelector('[data-act="freg"][data-v="'+k+'"]');if(b)b.focus();return;}
+  else if(a==='fregall'){S.form.regs=S.form.regs.length===REGIONS.length?[]:REGIONS.map(function(r,k){return k;});delete S.form.err.regs;render('__none');var b2=app.querySelector('[data-act="fregall"]');if(b2)b2.focus();return;}
+  else if(a==='fst'){S.form.st=v;render('__none');var b3=app.querySelector('[data-act="fst"][data-v="'+v+'"]');if(b3)b3.focus();return;}
+  else if(a==='region'){S.region=+v;}
+  else if(a==='mapmode'){S.mapMode=v;}
+  else if(a==='report'){S.report=true;}
+  else if(a==='toast'){toast(v);return;}
+  else if(a==='ask'){toast('Na versão real, abre o assistente já com o contexto deste serviço.');return;}
+  render();
+});
+app.addEventListener('change',function(e){
+  var a=e.target.getAttribute('data-act');
+  if(a==='month'){S.mi=+e.target.value;render();}
+  else if(a==='sort'){S.sort=e.target.value;render();}
+  else if(a==='areasel'){S.area=e.target.value;render();}
+  var f=e.target.getAttribute('data-f');
+  if(f&&S.form){S.form[f]=e.target.value;delete S.form.err[f];if(f==='area'){S.form.svc='';S.form._focus='f-area';render('__none');document.getElementById('f-area').focus();}else if(f==='svc'){render('__none');document.getElementById('f-svc').focus();}}
+  else if(a==='mapsel'){S.mapArea=e.target.value;render();}
+});
+app.addEventListener('input',function(e){if(e.target.id==='q'){S.q=e.target.value;render('q');return;}var f=e.target.getAttribute('data-f');if(f&&S.form&&e.target.tagName!=='SELECT'){S.form[f]=e.target.value;}});
+app.addEventListener('submit',function(e){
+  e.preventDefault();if(!S.form)return;var F=S.form,er={};
+  if(!F.t.trim())er.t='Dê um nome para a ação.';
+  if(!F.area)er.area='Escolha a área.';
+  if(!F.svc)er.svc='Escolha o serviço.';
+  if(!F.regs.length)er.regs='Escolha ao menos uma região.';
+  F.err=er;
+  if(Object.keys(er).length){var first={t:'f-t',area:'f-area',svc:'f-svc'}[Object.keys(er)[0]];render('__none');var el=first?document.getElementById(first):app.querySelector('[data-act="freg"]');if(el)el.focus();return;}
+  var s=SVC.find(function(x){return x.id===F.svc;}),i=lastWithData(S.mi);
+  var regs=F.regs.length===REGIONS.length?'Cidade toda':F.regs.slice().sort().map(function(k){return REGIONS[k];}).join(', ');
+  ACTIONS.unshift({t:F.t.trim(),a:F.area,s:F.svc,r:regs,st:F.st,from:s.hist[i],to:null,isNew:true});
+  S.form=null;S.detail=null;S.view='acoes';render();toast('Ação registrada. O impacto aparece a partir da próxima pesquisa.');
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&(S.detail||S.report||S.form)){if(S.form)S.form=null;else{S.detail=null;S.report=false;}render();return;}
+  var g=e.target.closest&&e.target.closest('g[data-act]');
+  if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();var k=g.getAttribute('data-v');S.region=+k;render('__none');var n=app.querySelector('g[data-act="region"][data-v="'+k+'"]');if(n)n.focus();}
+});
+var mq=window.matchMedia?window.matchMedia('(max-width:599px)'):null;if(mq){var h=function(){render('__none');};if(mq.addEventListener)mq.addEventListener('change',h);else if(mq.addListener)mq.addListener(h);}
+render();
+})();
+</script>
+</body>
+</html>
